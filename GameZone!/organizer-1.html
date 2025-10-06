@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organizer Dashboard — GameZone</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-dark: #05060a;
+  --bg-sidebar: #0a0b12;
+  --accent: linear-gradient(135deg, #00f0ff, #b23cff);
+  --neon-cyan: #00f0ff;
+  --neon-purple: #b23cff;
+  --muted: #9aa0b2;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-dark);
+  color: white;
+}
+
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.sidebar {
+  width: 280px;
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar h2 {
+  font-size: 22px;
+  color: var(--neon-cyan);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.sidebar a {
+  padding: 12px 10px;
+  color: var(--muted);
+  text-decoration: none;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  display: block;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.sidebar a:hover {
+  background: rgba(0, 240, 255, 0.1);
+  color: white;
+}
+
+.main {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.header {
+  font-size: 26px;
+  margin-bottom: 20px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 20px;
+  flex: 1 1 220px;
+  box-shadow: 0 6px 20px rgba(178,60,255,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(178,60,255,0.5);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+}
+
+.card p {
+  color: var(--muted);
+}
+
+.event-form {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+
+.event-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.event-form input, .event-form select, .event-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.event-form input[type="submit"] {
+  background: var(--accent);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 12px;
+  transition: transform 0.3s ease;
+}
+
+.event-form input[type="submit"]:hover {
+  transform: translateY(-3px);
+}
+
+@media (max-width: 900px) {
+  body {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .sidebar a {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="sidebar">
+  <h2>Organizer Tools</h2>
+  <a href="#dashboard">Dashboard</a>
+  <a href="#settings">Settings</a>
+  <a href="index.html">← Home</a>
+</div>
+
+<div class="main">
+  <div id="dashboard" class="header">Dashboard Overview</div>
+  <div class="dashboard" id="dashboard-cards"></div>
+
+  <div id="events" class="header">Create & Schedule Event</div>
+  <div class="event-form">
+    <form>
+      <label>Event Name</label>
+      <input type="text" placeholder="Enter event name" required>
+
+      <label>Event Description</label>
+      <textarea placeholder="Describe the event" required></textarea>
+
+      <label>Event Date & Time</label>
+      <input type="datetime-local" required>
+
+      <label>Game Category</label>
+      <select required>
+        <option value="">Select game category</option>
+        <option value="fps">Valorant</option>
+        <option value="moba">Fortnite</option>
+        <option value="battle-royale">Call Of Duty:Warzone</option>
+        <option value="sports">PUBG:Battlegrounds</option>
+        <option value="strategy">Rocket League</option>
+        <option value="moba">League of Legends</option>
+      </select>
+
+      <label>Number of Participants</label>
+      <input type="number" placeholder="E.g., 10, 20" required>
+
+      <label>Event Banner</label>
+      <input type="file" accept="" required>
+
+      <input type="submit" value="Create Event">
+    </form>
+  </div>
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="organizer-backend.js"></script>
+
+<script>
+// Animated particles background
+const canvas = document.getElementById("bg-canvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+const particleCount = 80;
+
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+for (let i = 0; i < particleCount; i++) {
+  particles.push({
+    x: random(0, canvas.width),
+    y: random(0, canvas.height),
+    r: random(1, 4),
+    vx: random(-0.5, 0.5),
+    vy: random(-0.5, 0.5),
+    hue: random(0, 360)
+  });
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6);
+    gradient.addColorStop(0, `hsla(${p.hue}, 100%, 70%, 0.8)`);
+    gradient.addColorStop(1, `hsla(${p.hue}, 100%, 70%, 0)`);
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>

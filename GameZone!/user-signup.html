@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — GameZone</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* Keep your existing CSS unchanged */
+    :root {
+      --bg-1: #05060a;
+      --neon-cyan: #00f0ff;
+      --neon-purple: #b23cff;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-1);
+      overflow: hidden;
+      color: white;
+    }
+    canvas#particle-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+    .signup-box {
+      position: relative;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 14px;
+      box-shadow: 0 0 40px rgba(178, 60, 255, 0.6);
+      text-align: center;
+      width: 380px;
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .signup-box h2 {
+      margin-bottom: 20px;
+      color: var(--neon-cyan);
+      font-weight: 700;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 12px;
+      color: var(--neon-cyan);
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 14px;
+    }
+    input[type="submit"] {
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    input[type="submit"]:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(178, 60, 255, 0.6);
+    }
+    .link {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--neon-cyan);
+      text-decoration: none;
+    }
+    .link:hover {
+      color: var(--neon-purple);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="signup-box">
+    <h2>Create Your GameZone Account</h2>
+    <form id="signupForm">
+      <label>Full Name</label>
+      <input type="text" id="fullName" placeholder="Enter your full name" required>
+
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter your username" required>
+
+      <label>Email</label>
+      <input type="email" id="email" placeholder="Enter your email" required>
+
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Create a strong password" required>
+
+      <label>Confirm Password</label>
+      <input type="password" id="confirmPassword" placeholder="Re-enter password" required>
+
+      <label>Date of Birth</label>
+      <input type="date" id="dob" required>
+
+      <label>Favorite Game</label>
+      <select id="favoriteGame" required>
+        <option value="">Select your favorite game</option>
+        <option>Valorant</option>
+        <option>COD:Warzone</option>
+        <option>PUBG</option>
+        <option>Fortnite</option>
+        <option>League of Legends</option>
+        <option>Apex Legends</option>
+      </select>
+
+      <input type="submit" value="Sign Up">
+    </form>
+
+    <a href="index.html" class="link">← Back to Home</a>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './firebase.js';
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { collection, addDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value;
+      const username = document.getElementById("username").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const dob = document.getElementById("dob").value;
+      const favoriteGame = document.getElementById("favoriteGame").value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save additional user details in Firestore
+        await addDoc(collection(db, "users"), {
+          uid: user.uid,
+          fullName,
+          username,
+          email,
+          dob,
+          favoriteGame
+        });
+
+        alert("Account created successfully!");
+        window.location = "index.html";
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  </script>
+
+  <script>
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let w = canvas.width = window.innerWidth,
+        h = canvas.height = window.innerHeight;
+    const particles = [];
+    const PCOUNT = Math.floor((w * h) / 70000) + 25;
+
+    function rand(min, max) { return Math.random() * (max - min) + min }
+
+    window.addEventListener('resize', () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+
+    for (let i = 0; i < PCOUNT; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: rand(-0.3, 0.3),
+        vy: rand(-0.3, 0.3),
+        r: rand(0.6, 2.5),
+        hue: rand(180, 300),
+        alpha: rand(0.05, 0.25)
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      for (let p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -50) p.x = w + 50;
+        if (p.x > w + 50) p.x = -50;
+        if (p.y < -50) p.y = h + 50;
+        if (p.y > h + 50) p.y = -50;
+
+        const grd = ctx.createRadialGradient(p.x, p.y, p.r * 0.2, p.x, p.y, p.r * 8);
+        grd.addColorStop(0, `hsla(${p.hue},100%,70%,${p.alpha})`);
+        grd.addColorStop(0.6, `hsla(${(p.hue + 160) % 360},80%,55%,${p.alpha * 0.14})`);
+        grd.addColorStop(1, `rgba(0,0,0,0)`);
+
+        ctx.beginPath();
+        ctx.fillStyle = grd;
+        ctx.arc(p.x, p.y, p.r * 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${p.hue},90%,70%,${Math.min(0.95, p.alpha * 6)})`;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+
+  <script type="module" src="firebase.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GameZone — Plan. Play. Conquer.</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <!-- ICA Rubrik from CDNFonts (as used earlier) -->
+  <link href="https://fonts.cdnfonts.com/css/ica-rubrik-black" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-1: #05060a;
+      --neon-cyan: #00f0ff;
+      --neon-purple: #b23cff;
+      --muted: #9aa0b2;
+      --glass: rgba(255,255,255,0.04);
+      --accent: linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+    }
+    /* Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(178,60,255,0.06), transparent),
+                  radial-gradient(900px 400px at 90% 90%, rgba(0,240,255,0.04), transparent),
+                  var(--bg-1);
+      color:#e9eef8;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+
+    /* Canvas particles fill */
+    #particle-canvas{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      mix-blend-mode:screen;opacity:0.95;
+    }
+
+    /* Page container */
+    .page{
+      position:relative;z-index:5;min-height:100vh;display:flex;flex-direction:column;
+    }
+
+    /* NAVBAR */
+    nav{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;padding:18px 34px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      backdrop-filter: blur(6px);border-bottom:1px solid rgba(255,255,255,0.03);
+      position:sticky;top:0;z-index:20;
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;font-weight:800;
+      font-family: 'ICA Rubrik Black', 'Poppins', sans-serif;
+      letter-spacing:1px;font-size:18px;color:var(--neon-cyan);
+      text-shadow:0 0 18px rgba(0,240,255,0.08), 0 0 30px rgba(178,60,255,0.03);
+    }
+    .brand .logo{
+      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#001d21,#1b0022);
+      display:flex;align-items:center;justify-content:center;box-shadow: 0 6px 20px rgba(178,60,255,0.08), inset 0 -6px 18px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .brand .logo span{ font-weight:900;color:#fff; font-size:14px; transform:translateY(-1px) }
+
+    .nav-links{ display:flex;gap:18px;align-items:center;}
+    .nav-links a{ color:var(--muted); text-decoration:none; font-weight:600; font-size:14px; padding:8px 12px; border-radius:10px; transition:all .25s; }
+    .nav-links a:hover{ color:#fff; box-shadow: 0 8px 30px rgba(178,60,255,0.08); transform:translateY(-3px); }
+
+    .cta-btn{
+      padding:10px 16px;border-radius:12px;background:var(--accent);
+      -webkit-background-clip:text;background-clip:text;color:transparent;
+      border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;
+    }
+    .cta-btn::after{
+      content:'';position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05));
+      mix-blend-mode:overlay;opacity:0.9;border-radius:12px;pointer-events:none;
+    }
+
+    /* HERO */
+    .hero{
+      display:grid;grid-template-columns: 1fr 560px;gap:40px;padding:60px 6vw;align-items:center;
+      min-height:calc(100vh - 78px);
+    }
+    .hero-left{max-width:720px;position:relative;z-index:6}
+    .eyebrow{
+      display:inline-block;padding:6px 10px;border-radius:8px;background:linear-gradient(90deg, rgba(0,240,255,0.08), rgba(178,60,255,0.06));
+      color:var(--neon-cyan);font-weight:700;margin-bottom:18px;font-size:13px;
+      box-shadow: 0 6px 24px rgba(230, 255, 7, 0.03);
+    }
+    h1{
+      font-family: 'ICA Rubrik Black', 'Poppins', sans-serif;
+      font-size:48px;line-height:1.02;margin-bottom:18px;color:transparent;
+      -webkit-background-clip:text;background-clip:text;background-image:linear-gradient(90deg, #fff, #cdd6ff);
+      text-shadow: 0 6px 30px rgba(178,60,255,0.06);
+    }
+    .tagline{
+      font-size:18px;color:var(--muted);margin-bottom:22px;
+    }
+    .hero-ctas{display:flex;gap:16px;align-items:center;margin-top:10px;}
+    .btn{
+      padding:12px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);
+      color:#fff;font-weight:700;cursor:pointer;transition:transform .25s, box-shadow .25s;
+    }
+    .btn:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(178,60,255,0.08)}
+    .ghost{background:transparent;border:1px dashed rgba(255,255,255,0.06);color:var(--muted)}
+
+    /* small info chips */
+    .chips{display:flex;gap:12px;margin-top:22px;}
+    .chip{padding:8px 12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:999px;font-weight:600;font-size:13px;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+    .chip strong{display:block;color:#fff;font-size:12px}
+
+    /* 3D carousel area (right) */
+    .carousel-wrap{
+      position:relative;width:100%;height:520px;perspective:1400px;display:flex;align-items:center;justify-content:center;
+      z-index:6;
+    }
+    .carousel{
+      width:420px;height:320px;position:relative;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.2,.9,.3,1);
+    }
+
+    .carousel__item{
+      --w:380px; --h:220px;
+      position:absolute;left:50%;top:50%;width:var(--w);height:var(--h);
+      transform-origin:center center;margin:-110px 0 0 -190px;border-radius:18px;
+      overflow:hidden;border:1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 6px 24px rgba(178,60,255,0.06);
+      background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
+      display:flex;flex-direction:column;
+    }
+    .carousel__item img{width:100%;height:100%;object-fit:cover;opacity:0.95;filter:contrast(1.05) saturate(1.1)}
+    .carousel__meta{
+      position:absolute;left:14px;bottom:14px;padding:10px 12px;border-radius:10px;background:linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25));backdrop-filter: blur(4px);
+      color:#fff;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,0.03)
+    }
+    /* small rotation indicator */
+    .rotate-control{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:8}
+    .dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.04)}
+    .dot.active{background:linear-gradient(90deg,var(--neon-cyan),var(--neon-purple));box-shadow:0 6px 18px rgba(178,60,255,0.12)}
+
+    /* Sections */
+    section{padding:80px 6vw}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+    .feature-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:22px;border-radius:14px;border:1px solid rgba(255,255,255,0.03);min-height:140px;display:flex;flex-direction:column;gap:10px;transition:transform .3s}
+    .feature-card:hover{transform:translateY(-8px);box-shadow:0 24px 60px rgba(0,0,0,0.6)}
+    .feature-card h4{font-family:'ICA Rubrik Black', 'Poppins';letter-spacing:0.6px}
+    .feature-card p{color:var(--muted);font-size:14px}
+
+    /* Footer */
+    footer{padding:30px 6vw;border-top:1px solid rgba(255,255,255,0.02);color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+
+    /* Animations */
+    .fade-up{opacity:0;transform:translateY(18px);transition:opacity .7s ease, transform .7s cubic-bezier(.2,.9,.3,1)}
+    .in-view{opacity:1;transform:none}
+
+    /* Responsive */
+    @media (max-width:1000px){
+      .hero{grid-template-columns:1fr 420px;gap:24px}
+      .carousel{width:360px;height:270px}
+    }
+    @media (max-width:840px){
+      nav{padding:12px 18px}
+      .hero{grid-template-columns:1fr;min-height:820px;padding:40px 4vw}
+      .carousel-wrap{order:-1;margin-bottom:10px}
+      .carousel{transform:scale(.88)}
+    }
+    @media (max-width:480px){
+      h1{font-size:32px}
+      .carousel{width:320px;height:220px}
+      .carousel__item{--w:300px;--h:180px}
+      .features{grid-template-columns:1fr}
+    }
+
+
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px;
+      }
+      
+      .feature-card {
+        background: rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 25px;
+        width: 280px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 0 15px rgba(178,60,255,0.3);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+      
+      .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 0 30px rgba(0,255,255,0.5);
+      }
+      
+      .feature-btn {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #00ffff, #b23cff);
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.3s;
+      }
+      
+      .feature-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 0 15px #b23cff;
+      }
+      
+  </style>
+</head>
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="page">
+    <!-- NAV -->
+    <nav>
+      <div class="brand">
+        <div class="logo"><span>GZ!</span></div>
+        <div>
+          <div style="font-size:13px;opacity:0.95">GAMEZONE</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:-2px">Plan. Play. Conquer.</div>
+        </div>
+      </div>
+
+      <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#events">Events</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#about">About</a>
+        <a class="cta-btn" href="user-login.html" style="font-size:13px;padding:10px 14px">Login</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero" id="home">
+      <div class="hero-left">
+        <div class="eyebrow">FEATURED • LIVE TOURNAMENTS</div>
+        <h1>Plan. Play. Conquer. <br/><span style="font-size:20px;color:var(--muted);font-family:'Poppins'">Your Ultimate Gaming Event Scheduler</span></h1>
+        <p class="tagline">
+            Organize tournaments, register for matches, <br/>
+            and join your community — all in one neon-lit hub. <br/>
+            Smooth animations, fast UI, <br/>
+            and future-ready Firebase integration.
+          </p>
+        <div class="hero-ctas">
+          <button class="btn" id="explore-btn">Explore Events</button>
+          <button class="btn ghost" id="organizer-btn">Organizer Login</button>
+        </div>
+
+        <div class="chips">
+          <div class="chip"><span style="font-size:12px">Up next</span><strong id="next-event">Valorant — Oct 10</strong></div>
+          <div class="chip"><span style="font-size:12px">Players</span><strong>1,254+</strong></div>
+          <div class="chip"><span style="font-size:12px">Live</span><strong>3 ongoing</strong></div>
+        </div>
+      </div>
+
+      <!-- 3D Carousel -->
+      <div class="carousel-wrap" aria-hidden="false">
+        <div class="carousel" id="carousel"></div>
+        <div class="rotate-control" id="rotate-indicators"></div>
+      </div>
+    </header>
+
+    <!-- FEATURES -->
+    <section id="events" class="fade-up">
+        <h2 style="
+        font-family: 'Poppins';
+        margin-bottom: 16px;
+        text-align: center;
+        color: #fff;
+        text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+      ">
+        What you can do ✨
+      </h2>
+      
+      <  <div class="features">
+        <div class="feature-card">
+          <h4>Create & Schedule</h4>
+          <p>Create one-time or recurring tournaments, add rules, prize pools, and slots.</p>
+          <a href="create-schedule.html" class="feature-btn">Go to Scheduler</a>
+        </div>
+        <div class="feature-card">
+          <h4>Register & Join</h4>
+          <p>Easy registration for players — auto-confirmation and countdown timers for matches.</p>
+          <a href="register-join.html" class="feature-btn"> Register & Join</a>
+        </div>
+        <div class="feature-card">
+          <h4>Organizer Tools</h4>
+          <p>Organizer dashboard to manage participants, slots, and event analytics.</p>
+          <a href="organizer-1.html" class="feature-btn"> Organizer Tools</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery" class="fade-up">
+      <h2 style="font-family:'ICA Rubrik Black';margin-bottom:16px">Game Gallery</h2>
+      <div style="display:flex;gap:18px;flex-wrap:wrap">
+        <!-- JS will inject small cards here -->
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="fade-up" style="padding-top:40px;padding-bottom:40px">
+      <h2 style="font-family:'ICA Rubrik Black';margin-bottom:10px">About GameZone</h2>
+      <p style="color:var(--muted);max-width:900px">
+        GameZone is a cutting-edge game event scheduler and a comprehensive online platform designed to revolutionize the way gamers, organizers, and professionals connect, compete, and grow. Our mission is to provide a seamless experience where event planning, skill development, and certification come together under one roof. Whether you are an event organizer looking to host tournaments, a gamer seeking new challenges, or a professional aiming to certify your skills, GameZone offers the tools and features to make it happen effortlessly. With an intuitive interface, real-time updates, and secure backend support, GameZone turns gaming events into well-coordinated experiences that everyone can enjoy.
+
+        Our platform goes beyond scheduling — it offers a wide range of features to empower the gaming community. Gamers can explore a dedicated “Prepare” section to access tests and practice sessions tailored for frontend, backend, SQL, AI, and machine learning, complete with interactive MCQs and coding challenges. Organizers can easily create, manage, and track events using GameZone’s dashboard, while participants receive live updates and event summaries. With integrated payment systems, certification generation, and a robust Firebase backend for authentication, storage, and database management, GameZone delivers a smooth, reliable, and professional service. Ultimately, GameZone is more than just a scheduler — it’s a complete ecosystem for gaming, learning, and achievement.
+      </p>
+    </section>
+
+    <footer>
+      <div>© <strong>GameZone</strong> — Built by Antriksh</div>
+      <div style="color:var(--muted)">Follow • Discord | Twitter | GitHub</div>
+    </footer>
+  </div>
+
+  <script>
+    /***********************
+      Dummy game data (7 items)
+    ***********************/
+    const games = [
+      { id:1, name:"Valorant", genre:"FPS", platform:"PC", date:"2025-10-10", desc:"5v5 tactical shooter — ultimate team strategy and reflexes.", img:"https://www.riotgames.com/darkroom/1440/8d5c497da1c2eeec8cffa99b01abc64b:5329ca773963a5b739e98e715957ab39/ps-f2p-val-console-launch-16x9.jpg" },
+      { id:2, name:"Fortnite", genre:"Battle Royale", platform:"PC/Console", date:"2025-10-15", desc:"Build, battle and outlast — a creative survival royale.", img:"https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cm9wwjg2r2n9e08n4hrfeouns" },
+      { id:3, name:"Call of Duty: Warzone", genre:"FPS", platform:"PC/Console", date:"2025-10-20", desc:"Large-scale combat and intense multiplayer.", img:"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1962663/54bd6a40eb3759aca46966aadd4c4d0d84b2713e/header.jpg?t=1754582452" },
+      { id:4, name:"PUBG: Battlegrounds", genre:"Battle Royale", platform:"Mobile/PC", date:"2025-10-22", desc:"Land, loot and survive to be the last standing.", img:"https://www.vice.com/wp-content/uploads/sites/2/2018/12/1545803974526-40176727491_31da2b03d8_b.jpeg" },
+      { id:5, name:"Rocket League", genre:"Sports/Arcade", platform:"PC/Console", date:"2025-10-25", desc:"Soccer with rocket-powered cars — fast arcade thrills.", img:"https://www.rocketleague.com/rr7/rl_evergreen-BuFUX3Ml.jpg" },
+      { id:6, name:"League of Legends", genre:"MOBA", platform:"PC", date:"2025-10-28", desc:"Choose your champion and fight in 5v5 arenas.", img:"https://cdn1.epicgames.com/offer/24b9b5e323bc40eea252a10cdd3b2f10/EGS_LeagueofLegends_RiotGames_S1_2560x1440-47eb328eac5ddd63ebd096ded7d0d5ab" },
+    ];
+
+    /***********************
+      Build 3D Carousel
+    ***********************/
+    const carousel = document.getElementById('carousel');
+    const indicators = document.getElementById('rotate-indicators');
+    let theta = 0;
+    const count = games.length;
+    const radius = 520; // radius for distribution (tweak for spacing)
+    // create items positioned around Y-axis
+    for(let i=0;i<count;i++){
+      const item = document.createElement('div');
+      item.className = 'carousel__item';
+      // set transform to rotateY around circle
+      const angle = (360 / count) * i;
+      item.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+      item.dataset.index = i;
+      // inner content
+      item.innerHTML = `
+        <img alt="${games[i].name}" src="${games[i].img}">
+        <div class="carousel__meta">${games[i].name} • ${games[i].platform}</div>
+      `;
+      carousel.appendChild(item);
+
+      // indicators
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i===0? ' active':'');
+      dot.dataset.index = i;
+      dot.addEventListener('click', ()=> rotateTo(i));
+      indicators.appendChild(dot);
+    }
+
+    // automatic rotation
+    let current = 0;
+    let autoRotate = true;
+    function rotateTo(index){
+      current = index % count;
+      theta = (360/count) * current * -1;
+      carousel.style.transform = `rotateY(${theta}deg)`;
+      // update indicators
+      document.querySelectorAll('.dot').forEach((d,i)=>{
+        d.classList.toggle('active', i===current);
+      });
+    }
+    // auto progress
+    let autoInterval = setInterval(()=>{
+      if(autoRotate) rotateTo((current+1)%count);
+    }, 3500);
+
+    // pause rotation on hover
+    carousel.addEventListener('mouseenter', ()=> autoRotate=false);
+    carousel.addEventListener('mouseleave', ()=> autoRotate=true);
+
+    // initial position
+    rotateTo(0);
+
+    /***********************
+      Inject Gallery cards
+    ***********************/
+    (function populateGallery(){
+      const gallerySection = document.querySelector('#gallery > div');
+      games.forEach(g=>{
+        const card = document.createElement('div');
+        card.style.width='220px';
+        card.style.borderRadius='12px';
+        card.style.overflow='hidden';
+        card.style.border='1px solid rgba(255,255,255,0.03)';
+        card.style.background='linear-gradient(180deg, rgba(255,255,255,0.02), transparent)';
+        card.style.boxShadow='0 18px 50px rgba(0,0,0,0.6)';
+        card.innerHTML = `
+          <div style="height:120px;overflow:hidden"><img src="${g.img}" alt="${g.name}" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+          <div style="padding:10px">
+            <div style="font-weight:800;font-family:'ICA Rubrik Black';font-size:14px">${g.name}</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:6px">${g.genre} • ${g.platform}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+              <div style="font-size:13px;color:#fff;font-weight:700">${g.date}</div>
+              <button class="btn" style="padding:8px 10px;font-size:12px">Details</button>
+            </div>
+          </div>
+        `;
+        gallerySection.appendChild(card);
+      });
+    })();
+
+    /***********************
+      Particles (canvas) + animated background subtle motion
+      Lightweight and responsive
+    ***********************/
+    (function particles(){
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let w=canvas.width=innerWidth, h=canvas.height=innerHeight;
+      const particles = [];
+      const PCOUNT = Math.floor((w*h)/70000) + 22; // scale with screen
+      function rand(min,max){return Math.random()*(max-min)+min}
+
+      window.addEventListener('resize', ()=>{
+        w=canvas.width=innerWidth;h=canvas.height=innerHeight;
+      });
+
+      for(let i=0;i<PCOUNT;i++){
+        particles.push({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          vx: rand(-0.2,0.2),
+          vy: rand(-0.3,0.3),
+          r: rand(0.6,2.5),
+          hue: Math.random()*360,
+          alpha: rand(0.05,0.25)
+        });
+      }
+
+      function draw(){
+        ctx.clearRect(0,0,w,h);
+        // soft gradient overlay
+        // draw particles
+        for(let p of particles){
+          p.x += p.vx;
+          p.y += p.vy;
+          if(p.x< -50) p.x = w+50;
+          if(p.x> w+50) p.x = -50;
+          if(p.y< -50) p.y = h+50;
+          if(p.y> h+50) p.y = -50;
+
+          ctx.beginPath();
+          // glow circle
+          const grd = ctx.createRadialGradient(p.x,p.y,p.r*0.2,p.x,p.y,p.r*8);
+          grd.addColorStop(0, `hsla(${p.hue},100%,70%,${p.alpha})`);
+          grd.addColorStop(0.6, `hsla(${(p.hue+160)%360},80%,55%,${p.alpha*0.14})`);
+          grd.addColorStop(1, `rgba(0,0,0,0)`);
+          ctx.fillStyle = grd;
+          ctx.arc(p.x,p.y,p.r*6,0,Math.PI*2);
+          ctx.fill();
+
+          // tiny core
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${p.hue},90%,70%,${Math.min(0.95,p.alpha*6)})`;
+          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+          ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+    })();
+
+    /***********************
+      Scroll reveal with IntersectionObserver
+    ***********************/
+    (function reveal(){
+      const obs = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add('in-view');
+            obs.unobserve(entry.target);
+          }
+        });
+      },{threshold:0.12});
+
+      document.querySelectorAll('.fade-up').forEach(el=>{
+        obs.observe(el);
+      });
+      // also observe feature cards and gallery items
+      document.querySelectorAll('.feature-card, #gallery > div > div').forEach(el=>{
+        el.classList.add('fade-up');
+        obs.observe(el);
+      });
+    })();
+
+    /***********************
+      Small interactions
+    ***********************/
+    document.getElementById('explore-btn').addEventListener('click', ()=> {
+      document.getElementById('events').scrollIntoView({behavior:'smooth'});
+    });
+    document.getElementById("organizer-btn").addEventListener("click", () => {
+        window.location.href = "organizer.html";
+      });
+
+    // keyboard arrow rotate
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowLeft') rotateTo((current-1+count)%count);
+      if(e.key === 'ArrowRight') rotateTo((current+1)%count);
+    });
+  </script>
+
+  <script>
+    document.getElementById("organizer-btn").addEventListener("click", () => {
+        window.location.href = "organizer.html";
+    });
+    </script>
+    
+</body>
+</html>

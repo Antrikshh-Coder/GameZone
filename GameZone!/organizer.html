@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Organizer Event — GameZone</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-1:#05060a;
+  --neon-cyan:#00fff7;
+  --neon-purple:#b23cff;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #0b0c10 0%, #05060a 100%);
+  overflow: hidden;
+  color: white;
+}
+canvas#particle-canvas, canvas#burst-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.organizer-box {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  border-radius: 18px;
+  text-align: center;
+  width: 400px;
+  background: rgba(0,0,0,0.7);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 0 35px rgba(178,60,255,0.4);
+  animation: glowBox 3s infinite alternate;
+}
+@keyframes glowBox {
+  0% { box-shadow: 0 0 20px rgba(178,60,255,0.4); }
+  100% { box-shadow: 0 0 45px rgba(0,255,247,0.6); }
+}
+.organizer-box h2 {
+  margin-bottom: 20px;
+  color: #fff;
+  text-shadow: 0 0 10px var(--neon-purple);
+}
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+textarea { height: 80px; resize: none; }
+input:focus, textarea:focus, select:focus {
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 10px var(--neon-purple);
+}
+input[type="submit"] {
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all .3s;
+}
+input[type="submit"]:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(178,60,255,0.6);
+}
+label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--neon-cyan);
+  text-align: left;
+}
+.back-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid var(--neon-purple);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.back-btn:hover {
+  background: var(--neon-purple);
+  box-shadow: 0 0 15px var(--neon-purple);
+}
+#success-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  padding: 20px 30px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 12px;
+  text-align: center;
+  opacity: 0;
+  z-index: 999;
+  box-shadow: 0 0 20px rgba(0,255,247,0.6);
+  pointer-events: none;
+}
+#success-popup.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  animation: popupAnim 0.8s ease;
+}
+@keyframes popupAnim {
+  0% { transform: translate(-50%, -50%) scale(0.5) rotate(-10deg); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+}
+</style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+<canvas id="burst-canvas"></canvas>
+
+<div class="organizer-box">
+  <h2>Create Gaming Event</h2>
+  <form id="event-form">
+    <label>Event Name</label>
+    <input type="text" id="event-name" placeholder="Enter event name" required>
+
+    <label>Event Description</label>
+    <textarea id="event-desc" placeholder="Describe the event" required></textarea>
+
+    <label>Event Date & Time</label>
+    <input type="datetime-local" id="event-datetime" required>
+
+    <label>Game Category</label>
+    <select id="event-category" required>
+      <option value="">Select game category</option>
+      <option value="Valorant">Valorant</option>
+      <option value="Fortnite">Fortnite</option>
+      <option value="COD">Call Of Duty: Warzone</option>
+      <option value="PUBG">PUBG: Battlegrounds</option>
+      <option value="Rocket League">Rocket League</option>
+      <option value="LOL">League of Legends</option>
+    </select>
+
+    <label>Number of Participants</label>
+    <input type="number" id="event-participants" placeholder="E.g., 10, 20" required>
+
+    <label>Event Banner</label>
+    <input type="file" id="event-banner" accept="image/*" required>
+
+    <input type="submit" value="Create Event">
+  </form>
+  <a href="index.html" class="back-btn">← Back to Home</a>
+</div>
+
+<div id="success-popup">🎉 Successfully Organized Event!</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBS2q2fqORrW2WxGaBF_WwSRYwPH98mFqA",
+  authDomain: "gamezone-db.firebaseapp.com",
+  projectId: "gamezone-db",
+  storageBucket: "gamezone-db.appspot.com",
+  messagingSenderId: "300177839069",
+  appId: "1:300177839069:web:8eecee736bf57c77175c34"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// 🔹 DSA: Merge Sort function
+function mergeSort(events) {
+  if (events.length <= 1) return events;
+  const mid = Math.floor(events.length / 2);
+  const left = mergeSort(events.slice(0, mid));
+  const right = mergeSort(events.slice(mid));
+  return merge(left, right);
+}
+
+function merge(left, right) {
+  const sorted = [];
+  while (left.length && right.length) {
+    if (new Date(left[0].dateTime) < new Date(right[0].dateTime)) {
+      sorted.push(left.shift());
+    } else {
+      sorted.push(right.shift());
+    }
+  }
+  return sorted.concat(left, right);
+}
+
+// 🔹 Form Submission
+document.getElementById("event-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const eventName = document.getElementById("event-name").value.trim();
+  const eventDesc = document.getElementById("event-desc").value.trim();
+  const eventDateTime = document.getElementById("event-datetime").value;
+  const eventCategory = document.getElementById("event-category").value;
+  const eventParticipants = document.getElementById("event-participants").value.trim();
+  const bannerFile = document.getElementById("event-banner").files[0];
+  const organizerEmail = localStorage.getItem("loggedInUserEmail") || "unknown@gamezone.com";
+
+  if (!eventName || !eventDesc || !eventDateTime || !eventCategory || !eventParticipants || !bannerFile) {
+    alert("⚠️ Please fill all fields and upload a banner.");
+    return;
+  }
+
+  try {
+    console.log("🚀 Uploading banner...");
+    const storageRef = ref(storage, `event_banners/${Date.now()}_${bannerFile.name}`);
+    await uploadBytes(storageRef, bannerFile);
+    const bannerURL = await getDownloadURL(storageRef);
+
+    console.log("📝 Preparing event...");
+    const newEvent = {
+      name: eventName,
+      description: eventDesc,
+      dateTime: eventDateTime,
+      category: eventCategory,
+      participants: eventParticipants,
+      bannerURL: bannerURL,
+      organizerEmail: organizerEmail,
+      createdAt: serverTimestamp()
+    };
+
+    console.log("🔄 Sorting events (DSA)...");
+    const existingEventsSnapshot = await getDocs(collection(db, "events"));
+    const existingEvents = existingEventsSnapshot.docs.map(doc => doc.data());
+    mergeSort([...existingEvents, newEvent]);
+
+    console.log("🎯 Saving event...");
+    await addDoc(collection(db, "events"), newEvent);
+
+    showSuccessPopup();
+    e.target.reset();
+
+  } catch (error) {
+    console.error("❌ Error:", error);
+    alert("Error creating event. Check console.");
+  }
+});
+
+// 🔹 Success Popup
+function showSuccessPopup(){
+  const popup = document.getElementById("success-popup");
+  popup.classList.add("show");
+  createBurst();
+  setTimeout(() => popup.classList.remove("show"), 2500);
+}
+
+// 🔹 Particle Background Animation
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let w=canvas.width=window.innerWidth, h=canvas.height=window.innerHeight;
+const particles = [];
+const PCOUNT = Math.floor((w*h)/70000) + 25;
+function rand(min,max){return Math.random()*(max-min)+min}
+window.addEventListener('resize', ()=>{
+  w=canvas.width=window.innerWidth;
+  h=canvas.height=window.innerHeight;
+});
+for(let i=0;i<PCOUNT;i++){
+  particles.push({
+    x: Math.random()*w,
+    y: Math.random()*h,
+    vx: rand(-0.3,0.3),
+    vy: rand(-0.3,0.3),
+    r: rand(0.6,2.5),
+    hue: rand(180,300),
+    alpha: rand(0.05,0.25)
+  });
+}
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  for(let p of particles){
+    p.x += p.vx; p.y += p.vy;
+    if(p.x< -50) p.x=w+50;
+    if(p.x>w+50) p.x=-50;
+    if(p.y< -50) p.y=h+50;
+    if(p.y>h+50) p.y=-50;
+    const grd = ctx.createRadialGradient(p.x,p.y,p.r*0.2,p.x,p.y,p.r*8);
+    grd.addColorStop(0, `hsla(${p.hue},100%,70%,${p.alpha})`);
+    grd.addColorStop(0.6, `hsla(${(p.hue+160)%360},80%,55%,${p.alpha*0.14})`);
+    grd.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.beginPath();
+    ctx.fillStyle = grd;
+    ctx.arc(p.x,p.y,p.r*6,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${p.hue},90%,70%,${Math.min(0.95,p.alpha*6)})`;
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+
+// 🔹 Burst Effect
+function createBurst(){
+  const burstCanvas = document.getElementById("burst-canvas");
+  const burstCtx = burstCanvas.getContext("2d");
+  burstCanvas.width = window.innerWidth;
+  burstCanvas.height = window.innerHeight;
+  const burstParticles = [];
+  const burstCount = 30;
+  const centerX = window.innerWidth/2;
+  const centerY = window.innerHeight/2;
+  for(let i=0;i<burstCount;i++){
+    burstParticles.push({
+      x: centerX, y: centerY,
+      vx: rand(-4,4), vy: rand(-4,4),
+      r: rand(2,4), hue: rand(180,300), alpha: 1
+    });
+  }
+  let burstFrame = 0;
+  function burstDraw(){
+    burstCtx.clearRect(0,0,burstCanvas.width,burstCanvas.height);
+    burstFrame++;
+    for(let p of burstParticles){
+      p.x += p.vx; p.y += p.vy;
+      p.alpha -= 0.03;
+      if(p.alpha<0) p.alpha=0;
+      burstCtx.beginPath();
+      burstCtx.fillStyle = `hsla(${p.hue},100%,70%,${p.alpha})`;
+      burstCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      burstCtx.fill();
+    }
+    if(burstFrame<30) requestAnimationFrame(burstDraw);
+  }
+  burstDraw();
+}
+
+// 🔹 Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(reg => console.log("Service Worker registered.", reg))
+    .catch(err => console.error("Service Worker registration failed:", err));
+}
+</script>
+</body>
+</html>

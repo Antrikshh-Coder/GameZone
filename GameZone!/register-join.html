@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register & Join — GameZone</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/ica-rubrik-black" rel="stylesheet">
+
+<style>
+:root {
+    --bg-1: #05060a;
+    --neon-cyan: #00f0ff;
+    --neon-purple: #b23cff;
+    --muted: #9aa0b2;
+}
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-1);
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+}
+canvas#particle-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+.register-box {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.form-container {
+    background: rgba(0,0,0,0.85);
+    padding: 40px;
+    border-radius: 16px;
+    width: 450px;
+    box-shadow: 0 0 40px rgba(178,60,255,0.6);
+    animation: fadeIn 1.5s ease;
+}
+@keyframes fadeIn {
+    from {opacity:0; transform: translateY(20px);}
+    to {opacity:1; transform: translateY(0);}
+}
+.form-container h2 {
+    font-family: 'ICA Rubrik Black', sans-serif;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 26px;
+    color: var(--neon-cyan);
+}
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 14px;
+}
+textarea {
+    height: 80px;
+    resize: none;
+}
+input[type="submit"] {
+    padding: 12px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform .2s;
+}
+input[type="submit"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(178,60,255,0.6);
+}
+label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--neon-cyan);
+    text-align: left;
+}
+</style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<div class="register-box">
+    <div class="form-container">
+        <h2>Register & Join Event</h2>
+        <form>
+            <label>Your Name</label>
+            <input type="text" placeholder="Enter your name" required>
+
+            <label>Email</label>
+            <input type="email" placeholder="Enter your email" required>
+
+            <label>Game</label>
+            <select required>
+                <option value="">Select game</option>
+                <option value="valorant">Valorant</option>
+                <option value="fortnite">Fortnite</option>
+                <option value="cod">Call of Duty: Warzone</option>
+                <option value="pubg">PUBG: Battlegrounds</option>
+                <option value="rocket-league">Rocket League</option>
+                <option value="lol">League of Legends</option>
+            </select>
+
+            <label>Team Name</label>
+            <input type="text" placeholder="Enter your team name" required>
+
+            <label>Additional Notes</label>
+            <textarea placeholder="Any extra info"></textarea>
+
+            <input type="submit" value="Join Event">
+        </form>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth, h = canvas.height = window.innerHeight;
+const particles = [];
+const PCOUNT = Math.floor((w*h)/70000) + 25;
+function rand(min,max){return Math.random()*(max-min)+min}
+window.addEventListener('resize', ()=>{
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+});
+for(let i=0;i<PCOUNT;i++){
+    particles.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        vx: rand(-0.3,0.3),
+        vy: rand(-0.3,0.3),
+        r: rand(0.6,2.5),
+        hue: rand(180,300),
+        alpha: rand(0.05,0.25)
+    });
+}
+function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(let p of particles){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x< -50) p.x=w+50;
+        if(p.x>w+50) p.x=-50;
+        if(p.y< -50) p.y=h+50;
+        if(p.y>h+50) p.y=-50;
+        const grd = ctx.createRadialGradient(p.x,p.y,p.r*0.2,p.x,p.y,p.r*8);
+        grd.addColorStop(0, `hsla(${p.hue},100%,70%,${p.alpha})`);
+        grd.addColorStop(0.6, `hsla(${(p.hue+160)%360},80%,55%,${p.alpha*0.14})`);
+        grd.addColorStop(1, `rgba(0,0,0,0)`);
+        ctx.beginPath();
+        ctx.fillStyle = grd;
+        ctx.arc(p.x,p.y,p.r*6,0,Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${p.hue},90%,70%,${Math.min(0.95,p.alpha*6)})`;
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+    }
+    requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+</body>
+</html>

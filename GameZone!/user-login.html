@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Login — GameZone</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-1:#05060a;
+  --neon-cyan:#00f0ff;
+  --neon-purple:#b23cff;
+  --muted:#9aa0b2;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-1);
+  overflow: hidden;
+  color: white;
+  position: relative;
+}
+canvas#particle-canvas{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.login-box {
+  position: relative;
+  z-index: 2;
+  background: rgba(0,0,0,0.6);
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(178,60,255,0.6);
+  text-align: center;
+  width: 360px;
+}
+.login-box h2 {
+  font-family: 'ICA Rubrik Black', sans-serif;
+  margin-bottom: 20px;
+  color: var(--neon-cyan);
+}
+input[type="text"], input[type="password"], input[type="email"] {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 14px;
+}
+button {
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform .2s;
+}
+button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(178,60,255,0.6);
+}
+.link {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--neon-cyan);
+  text-decoration: none;
+}
+.link:hover { color: var(--neon-purple); }
+label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--neon-cyan);
+  text-align: left;
+}
+.signup-link {
+  margin-top: 15px;
+  font-size: 14px;
+  color: var(--neon-cyan);
+}
+.signup-link a {
+  color: var(--neon-purple);
+  text-decoration: none;
+}
+.signup-link a:hover {
+  text-decoration: underline;
+}
+#errorMsg {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+
+<div class="login-box">
+  <h2>User Login</h2>
+  <form id="loginForm">
+    <label>Username or Email</label>
+    <input type="text" id="usernameOrEmail" placeholder="Enter username or email" required>
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password" required>
+
+    <div id="errorMsg"></div>
+
+    <button type="submit" id="login-btn">Login</button>
+  </form>
+
+  <div class="signup-link"> Don't have an account? <a href="user-signup.html">Sign Up</a> </div>
+  <a href="index.html" class="link">← Back to Home</a>
+</div>
+
+<script>
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let w=canvas.width=window.innerWidth, h=canvas.height=window.innerHeight;
+const particles = [];
+const PCOUNT = Math.floor((w*h)/70000) + 25;
+function rand(min,max){return Math.random()*(max-min)+min}
+window.addEventListener('resize', ()=>{
+  w=canvas.width=window.innerWidth;
+  h=canvas.height=window.innerHeight;
+});
+for(let i=0;i<PCOUNT;i++){
+  particles.push({
+    x: Math.random()*w,
+    y: Math.random()*h,
+    vx: rand(-0.3,0.3),
+    vy: rand(-0.3,0.3),
+    r: rand(0.6,2.5),
+    hue: rand(180,300),
+    alpha: rand(0.05,0.25)
+  });
+}
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  for(let p of particles){
+    p.x += p.vx; p.y += p.vy;
+    if(p.x< -50) p.x=w+50;
+    if(p.x>w+50) p.x=-50;
+    if(p.y< -50) p.y=h+50;
+    if(p.y>h+50) p.y=-50;
+    const grd = ctx.createRadialGradient(p.x,p.y,p.r*0.2,p.x,p.y,p.r*8);
+    grd.addColorStop(0, `hsla(${p.hue},100%,70%,${p.alpha})`);
+    grd.addColorStop(0.6, `hsla(${(p.hue+160)%360},80%,55%,${p.alpha*0.14})`);
+    grd.addColorStop(1, `rgba(0,0,0,0)`);
+    ctx.beginPath();
+    ctx.fillStyle = grd;
+    ctx.arc(p.x,p.y,p.r*6,0,Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${p.hue},90%,70%,${Math.min(0.95,p.alpha*6)})`;
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+<!-- Firebase Backend Script -->
+<script type="module">
+import { auth, db } from './firebase.js';
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const usernameOrEmail = document.getElementById("usernameOrEmail").value;
+    const password = document.getElementById("password").value;
+    const errorMsg = document.getElementById("errorMsg");
+    errorMsg.textContent = "";
+
+    try {
+        let email = usernameOrEmail;
+
+        if (!usernameOrEmail.includes("@")) {
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("username", "==", usernameOrEmail));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                errorMsg.textContent = "Username not found";
+                return;
+            }
+            querySnapshot.forEach(doc => {
+                email = doc.data().email;
+            });
+        }
+
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        errorMsg.style.color = "green";
+        errorMsg.textContent = "Login Successful! Redirecting...";
+
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 1200);
+
+    } catch (error) {
+        errorMsg.style.color = "red";
+        errorMsg.textContent = error.message;
+    }
+});
+</script>
+
+</body>
+</html>

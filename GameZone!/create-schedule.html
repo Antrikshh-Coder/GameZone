@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create & Schedule Event — GameZone</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #05060a;
+  --accent: #b23cff;
+  --cyan: #00ffff;
+  --card-bg: rgba(255,255,255,0.05);
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(circle at top left, #0a0a1f, #000);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+header { text-align: center; margin-bottom: 25px; }
+header h1 {
+  font-size: 2.5rem;
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent);
+}
+.event-form {
+  width: 90%;
+  max-width: 850px;
+  background: var(--card-bg);
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 40px 50px;
+  box-shadow: 0 0 40px rgba(178,60,255,0.4);
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin: 10px 0 5px;
+  color: var(--cyan);
+}
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.btn-submit {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(90deg, var(--cyan), var(--accent));
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+.btn-submit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px var(--accent);
+}
+.back-btn {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: white;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  text-decoration: none;
+  text-align: center;
+  transition: 0.3s;
+}
+.back-btn:hover {
+  background: var(--accent);
+  box-shadow: 0 0 15px var(--accent);
+}
+canvas#bg { position: fixed; inset: 0; z-index: 0; }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<header>
+<h1>🎮 Create & Schedule Event</h1>
+</header>
+
+<div class="event-form">
+<form id="eventForm">
+<label>Event Name</label>
+<input type="text" id="eventName" placeholder="Enter event name" required>
+
+<label>Description</label>
+<textarea id="eventDesc" placeholder="Describe your event"></textarea>
+
+<label>Date & Time</label>
+<input type="datetime-local" id="eventDate" required>
+
+<label>Game Title</label>
+<select id="gameTitle" required>
+<option value="">Select a game</option>
+<option>Valorant</option>
+<option>Fortnite</option>
+<option>Call of Duty: Warzone</option>
+<option>PUBG: Battlegrounds</option>
+<option>Rocket League</option>
+<option>League of Legends</option>
+</select>
+
+<label>Participants</label>
+<input type="number" id="participants" placeholder="Number of players" required>
+
+<input type="submit" value="Save & Schedule Event" class="btn-submit">
+</form>
+
+<a href="index.html" class="back-btn">← Back to Home</a>
+</div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+// DSA2: Conflict check
+async function isEventConflict(game, datetime) {
+  const q = query(collection(db, "events"),
+    where("game", "==", game),
+    where("date", "==", datetime)
+  );
+  const snapshot = await getDocs(q);
+  return !snapshot.empty;
+}
+
+document.getElementById("eventForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("eventName").value.trim();
+  const desc = document.getElementById("eventDesc").value.trim();
+  const date = document.getElementById("eventDate").value;
+  const game = document.getElementById("gameTitle").value;
+  const participants = document.getElementById("participants").value;
+
+  if (!name || !date || !game || !participants) {
+    alert("⚠️ Please fill all required fields.");
+    return;
+  }
+
+  try {
+    const conflict = await isEventConflict(game, date);
+    if (conflict) {
+      alert("❌ Conflict detected: An event for this game already exists at this date/time.");
+      return;
+    }
+
+    await addDoc(collection(db, "events"), {
+      name,
+      desc,
+      date,
+      game,
+      participants,
+      createdAt: new Date()
+    });
+
+    alert("✅ Event scheduled successfully!");
+    window.location.href = "index.html";
+
+  } catch (error) {
+    console.error("❌ Error scheduling event:", error);
+    alert("Error scheduling event.");
+  }
+});
+
+// Background animation
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resize);
+resize();
+const particles = Array.from({length: 80}, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  r: Math.random() * 2,
+  dx: (Math.random() - 0.5) * 0.5,
+  dy: (Math.random() - 0.5) * 0.5,
+}));
+function animate() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for (let p of particles) {
+    p.x += p.dx; p.y += p.dy;
+    if (p.x<0||p.x>canvas.width) p.dx*=-1;
+    if (p.y<0||p.y>canvas.height) p.dy*=-1;
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(178,60,255,0.6)";
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
