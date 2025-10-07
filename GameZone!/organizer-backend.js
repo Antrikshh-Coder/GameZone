@@ -5,6 +5,28 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 const form = document.querySelector(".event-form form");
 const storage = getStorage();
 
+/* ---------------------- 🔹 DSA 2: MERGE SORT ALGORITHM ---------------------- */
+function mergeSort(events) {
+  if (events.length <= 1) return events;
+  const mid = Math.floor(events.length / 2);
+  const left = mergeSort(events.slice(0, mid));
+  const right = mergeSort(events.slice(mid));
+  return merge(left, right);
+}
+
+function merge(left, right) {
+  const sorted = [];
+  while (left.length && right.length) {
+    if (new Date(left[0].eventDateTime) < new Date(right[0].eventDateTime)) {
+      sorted.push(left.shift());
+    } else {
+      sorted.push(right.shift());
+    }
+  }
+  return sorted.concat(left, right);
+}
+/* --------------------------------------------------------------------------- */
+
 function renderDashboard(events) {
   const dashboardContainer = document.getElementById("dashboard-cards");
   dashboardContainer.innerHTML = "";
@@ -18,7 +40,10 @@ function renderDashboard(events) {
   `;
   dashboardContainer.insertAdjacentHTML("beforeend", summaryCards);
 
-  events.forEach(event => {
+  /* 🔹 DSA Application: Sort events before displaying */
+  const sortedEvents = mergeSort(events);
+
+  sortedEvents.forEach(event => {
     const card = document.createElement("div");
     card.classList.add("card");
     card.innerHTML = `
@@ -39,7 +64,10 @@ function listenForEvents() {
     snapshot.forEach(doc => {
       events.push(doc.data());
     });
-    renderDashboard(events);
+
+    /* 🔹 Sort using DSA algorithm before rendering */
+    const sorted = mergeSort(events);
+    renderDashboard(sorted);
   }, error => {
     console.error("Error fetching events:", error);
   });
@@ -87,14 +115,7 @@ form.addEventListener("submit", async (e) => {
 
   } catch (error) {
     console.error("Error creating event:", error);
-
-    let errorMsg = "An unknown error occurred.";
-    if (error.code) {
-      errorMsg = `Error Code: ${error.code}\nMessage: ${error.message}`;
-    } else if (error.message) {
-      errorMsg = error.message;
-    }
-    alert(`Failed to create event:\n${errorMsg}`);
+    alert(`Failed to create event: ${error.message}`);
   }
 });
 
