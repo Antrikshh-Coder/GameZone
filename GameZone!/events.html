@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events — GameZone</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-1: #05060a;
+    --neon-cyan: #00f0ff;
+    --neon-purple: #b23cff;
+    --muted: #9aa0b2;
+}
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg-1);
+    color: white;
+}
+.container {
+    padding: 20px;
+}
+.card {
+    background: rgba(0,0,0,0.85);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(178,60,255,0.6);
+}
+.card h2 {
+    margin-top: 0;
+    color: var(--neon-cyan);
+}
+.event-card {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+.back-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    background: var(--neon-purple);
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+.back-button:hover {
+    background: var(--neon-cyan);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Back Button -->
+    <a class="back-button" onclick="history.back()">← Back</a>
+
+    <div class="card">
+        <h2>All Events</h2>
+        <div id="events-container">Loading events...</div>
+    </div>
+</div>
+
+<script type="module">
+import { db } from './firebase.js';
+import { collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+const eventsContainer = document.getElementById("events-container");
+
+const eventsCol = collection(db, "events"); // Change to your Firestore collection name
+const eventsQuery = query(eventsCol, orderBy("createdAt", "desc"));
+
+onSnapshot(eventsQuery, (snapshot) => {
+    eventsContainer.innerHTML = "";
+    if (snapshot.empty) {
+        eventsContainer.innerHTML = "<div>No events available.</div>";
+        return;
+    }
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        const eventCard = document.createElement("div");
+        eventCard.className = "event-card";
+        eventCard.innerHTML = `
+            <strong>Event Name:</strong> ${data.name || "N/A"} <br>
+            <strong>Date:</strong> ${data.date || "N/A"} <br>
+            <strong>Game:</strong> ${data.game || "N/A"} <br>
+            <strong>Location:</strong> ${data.location || "N/A"} <br>
+            <small>${data.description || ""}</small>
+        `;
+        eventsContainer.appendChild(eventCard);
+    });
+});
+</script>
+
+</body>
+</html>
+
